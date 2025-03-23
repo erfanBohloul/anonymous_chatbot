@@ -36,11 +36,13 @@ class Database(object):
         # Create the 'message' table if it doesn't exist
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS message (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY,
             sender INTEGER,
+            receiver INTEGER,
             content TEXT NOT NULL,
             time DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (sender) REFERENCES user (id)
+            FOREIGN KEY (sender) REFERENCES user (id),
+            FOREIGN KEY (receiver) REFERENCES user (id)
         )
         ''')
 
@@ -76,11 +78,11 @@ class Database(object):
         return self.cursor.fetchone()  # Returns a single user or None
 
     # Message-related methods
-    def add_message(self, sender_id, content):
+    def add_message(self, id, sender_id, receiver_id, content):
         """Add a message to the database."""
         self.cursor.execute('''
-        INSERT INTO message (sender, content) VALUES (?, ?)
-        ''', (sender_id, content))
+        INSERT INTO message (id, sender, receiver, content) VALUES (?, ?, ?, ?)
+        ''', (id, sender_id, receiver_id, content))
         self.conn.commit()
 
     def delete_message(self, message_id):
@@ -97,12 +99,28 @@ class Database(object):
         ''', (message_id,))
         return self.cursor.fetchone()  # Returns a single message or None
 
-    def get_sender_by_message_id(self, message_id):
+    def get_sender_id_by_message_id(self, message_id):
         """Get the sender of a message by its ID."""
         self.cursor.execute('''
         SELECT sender FROM message WHERE id = ?
         ''', (message_id,))
-        return self.cursor.fetchone()  # Returns the sender ID or None
+        result = self.cursor.fetchone()  # Returns the sender ID or None
+        if result:
+            return result[0]
+        
+        return None
+    
+    def get_receiver_id_by_message_id(self, message_id):
+        """Get the receiver of a message by its ID."""
+        self.cursor.execute('''
+        SELECT receiver FROM message WHERE id = ?
+        ''', (message_id,))
+        result = self.cursor.fetchone()  # Returns the sender ID or None
+        if result:
+            print(f'result{result}')
+            return result[0]
+    
+        return None
 
     def close(self):
         """Close the database connection."""
