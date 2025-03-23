@@ -20,6 +20,7 @@ def unpad(data):
 
 
 def encrypt(text):
+    return text
     key = AES_KEY
 
     # Convert username to bytes
@@ -32,7 +33,7 @@ def encrypt(text):
     cipher = AES.new(key, AES.MODE_CBC, iv)
     
     # Pad the username to match block size
-    padded_username = pad(text_bytes, AES.block_size)
+    padded_username = pad(text_bytes)
     
     # Encrypt the username
     ciphertext = cipher.encrypt(padded_username)
@@ -45,6 +46,7 @@ def encrypt(text):
 
 
 def decrypt(ciphertext, key):
+    return ciphertext
     # Decode base64 ciphertext
     encrypted_data = base64.b64decode(ciphertext.encode('utf-8'))
     

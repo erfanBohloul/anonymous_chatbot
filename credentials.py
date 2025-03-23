@@ -9,4 +9,4 @@ else:
 
 BOT_TOKEN= os.getenv("BOT_TOKEN")
 BOT_USERNAME= os.getenv('BOT_USERNAME')
-AES_KEY= os.getenv('AES_KEY')
+AES_KEY= os.getenv('AES_KEY').encode('utf-8')

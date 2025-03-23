@@ -1,18 +1,35 @@
 import sqlite3
 
-class Database:
-    def __init__(self, db_name='bot.db'):
+class Database(object):
+    _instance = None
+    
+    def __init__(self, db_name='database/bot.db'):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
         self.create_tables()
+
+    
+    def __new__(cls):
+        if cls._instance is None:
+            # Create the instance if it doesn't exist
+            cls._instance = super(Database, cls).__new__(cls)
+            # Call initialization logic only for the first instance
+            cls._instance._initialize()
+
+        return cls._instance
+    
+    def _initialize(self, db_name='database/bot.db'):
+        self.conn = sqlite3.connect(db_name)
+        self.cursor = self.conn.cursor()
+        self.create_tables()
+        
 
     def create_tables(self):
         # Create the 'user' table if it doesn't exist
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE
+            username TEXT NOT NULL UNIQUE
         )
         ''')
 
@@ -30,11 +47,11 @@ class Database:
         self.conn.commit()
 
     # User-related methods
-    def add_user(self, username, email):
+    def add_user(self, username):
         """Add a user to the database."""
         self.cursor.execute('''
-        INSERT INTO user (username, email) VALUES (?, ?)
-        ''', (username, email))
+        INSERT INTO user (username) VALUES (?)
+        ''', (username,))
         self.conn.commit()
 
     def delete_user(self, user_id):
@@ -90,3 +107,4 @@ class Database:
     def close(self):
         """Close the database connection."""
         self.conn.close()
+
