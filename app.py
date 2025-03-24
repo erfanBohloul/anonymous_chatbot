@@ -130,8 +130,8 @@ def get_receiver_from_root_message(message :Message):
         return None
 
 
-async def send_msg_to_receiver(sender_id :str, receiver_id :str, msg :str) -> None:
-    await bot.send_message(receiver_id, f'from {sender_id}:\n{msg}')
+async def send_msg_to_receiver(sender_id :str, receiver_id :str, msg :str) -> Message:
+    return await bot.send_message(receiver_id, f'{msg}')
 
 
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -139,29 +139,38 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     sender_name = update.message.from_user.id
 
+    # message template may be different depends on if you want to send message or answer one
+    msg_text = str()
     receiver_name = str()
     if is_root_message(replied_message):
         receiver_name = get_receiver_from_root_message(replied_message)
+        msg_text = f'from {sender_name}:\n{message.text}' # 
+
+
         if receiver_name is None:
             raise Exception("Invalid root")
     
     else:
         receiver_id = Database().get_receiver_id_by_message_id(replied_message.id)
         receiver_name = Database().find_user_by_id(receiver_id)[1]
-        if receiver_name == sender_name:
+        msg_text = f'from {sender_name}:\n{message.text}'
+
+        if str(receiver_name) == str(sender_name):
             receiver_id = Database().get_sender_id_by_message_id(replied_message.id)
             receiver_name = Database().find_user_by_id(receiver_id)[1]
+            msg_text = f'user {sender_name} answered:\n{message.text}'
+
 
         
-
     if receiver_name is None:
         raise Exception("Somthing wend wrong; Invalid receiver")
 
     logger.info(f'receiver: {receiver_name} sender: {sender_name}')
     sender_id = Database().find_user_by_name(sender_name)[0]
     receiver_id = Database().find_user_by_name(receiver_name)[0]
-    Database().add_message(message.id, sender_id, receiver_id, message.text)
-    await send_msg_to_receiver(receiver_name, message.text)
+    sent_message = await send_msg_to_receiver(sender_name, receiver_name, msg_text)
+
+    Database().add_message(sent_message.id, sender_id, receiver_id, message.text)
 
     await update.message.reply_text("sent")
     
